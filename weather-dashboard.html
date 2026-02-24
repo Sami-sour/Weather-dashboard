@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Mobile-screen */
+body {
+  background-color: rgba(90, 121, 223, 0.968);
+}
+
+.sr-only {
+  position: absolute;
+  left: -9999px;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 1rem;
+  color: white;
+}
+
+.weather-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.weather-main-container {
+  border-radius: 2rem;
+  width: 90%;
+  background: linear-gradient(135deg, #6e82f4, #3012f3);
+  margin: 1rem;
+  box-shadow: white 0px 0px 23px 2px;
+}
+
+.country-search-bar {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.enter-country {
+  width: 270px;
+  height: 2rem;
+  border-radius: 2rem;
+  border: none;
+  padding-left: 0.5rem;
+  outline: none;
+}
+
+.search-icon {
+  padding: 0.2rem;
+  border-radius: 50%;
+  border: none;
+  height: 2rem;
+  width: 2rem;
+  cursor: pointer;
+}
+
+.weather-message {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.weather-information {
+  color: white;
+}
+
+.error-mess {
+  color: white;
+  margin: 1rem;
+}
+
+.country-info {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.country {
+  font-size: 1.9rem;
+  font-weight: 600;
+}
+
+.country-name {
+  font-size: 1.4rem;
+}
+
+.condition {
+  font-size: 1.2rem;
+}
+
+.temp {
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin-top: 2rem;
+}
+
+.weather-forcast {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 4rem;
+  margin-top: 2.4rem;
+  row-gap: 0.5rem;
+  margin-left: 1.5rem;
+}
+
+.wea-info {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 2.5rem;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+i {
+  font-size: 1.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.search {
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+
+.weather-information {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/*  loader animation*/
+.loader {
+  border: 5px solid #fff;
+  border-top: 5px solid transparent;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin: 20px auto;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  100%{
+    transform: rotate(360deg);
+  }
+}
+
+/* Tablet */
+
+@media(min-width: 768px) {
+  .weather-main-container {
+    width: 70%;
+    padding: 1rem;
+  }
+
+  .enter-country {
+    width: 320px;
+  }
+
+  .temp {
+    font-size: 3rem;
+  }
+}
+
+
+/* Desktop */
+
+@media (min-width: 1024px) {
+    .weather-main-container {
+      width: 500px;
+      transition: 0.3s;
+    }
+
+    .weahter-main-container:hover {
+      transform: translateY(-8px);
+    }
+
+
+    .wea-info {
+      font-size: 1.1rem;
+    }
+}
+
+    </style>
+  </head>
+  <body>
+    <h1>Weather Dashboard</h1>
+
+    <div class="weather-layout">
+      <div class="weather-main-container">
+        <div class="country-search-bar">
+          <div class="input-country-name">
+            <label for="countryInput" class="sr-only">Enter country name</label>
+            <input
+              id="countryInput"
+              type="text"
+              name="enter-country"
+              class="enter-country"
+              placeholder="Enter country name "
+            />
+          </div>
+          <div class="search-btn">
+            <button class="search-icon" aria-label="Search-weather">
+              <i class="fa-solid fa-magnifying-glass search"></i>
+            </button>
+          </div>
+        </div>
+        <p class="error-mess" aria-live="polite"></p>
+
+        <div class="weather-information">
+          <p class="weather-message">Enter a country to now Real-Time Weather</p>
+      </div>
+    </div>
+    <script>
+
+const searchIcon = document.querySelector(".search-icon");
+const searchInput = document.querySelector(".enter-country");
+const weatherInfo = document.querySelector(".weather-information");
+const weatherMess = document.querySelector(".weather-message");
+const errorMess = document.querySelector(".error-mess");
+errorMess.innerHTML = "";
+
+//Local Storage 
+
+function safeStorage(action, key, value = null) {
+  try {
+    if(action === "set") localStorage.setItem(key, value);
+    if(action === "get") return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const lastCity = safeStorage("get", "lastCity");
+  if(lastCity) {
+    searchInput.value = lastCity;
+    fetchingWeatherApi();
+  }
+})
+
+searchInput.addEventListener("input", () => {
+  searchIcon.style.pointerEvents = "auto";
+  searchIcon.style.opacity = "1";
+  errorMess.textContent = "";
+});
+
+
+searchIcon.addEventListener("click", () => {
+  
+  fetchingWeatherApi()
+}) ;
+
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    fetchingWeatherApi();
+  }
+});
+
+const fetchingWeatherApi = async () => {
+
+
+  if(!searchInput.value.trim()) {
+  if(!weatherInfo.innerHTML) return ;
+
+    errorMess.textContent = "Please enter a country name";
+    return;
+  }
+
+  safeStorage("set", "lastCity", searchInput.value.trim());
+
+  weatherInfo.innerHTML = `<div class="loader"></div>`;
+  errorMess.textContent = "";
+
+
+
+  const URL = ` https://api.weatherapi.com/v1/current.json?key=8d2b8aa769634f51862145041252910&q=${searchInput.value}&aqi=no`;
+
+  try {
+
+    //Network Error
+    const fetchUrl = await fetch(URL);
+    if(!fetchUrl.ok) {
+      throw new Error("Network response failed")
+    }
+
+    //API Error
+    const response = await fetchUrl.json();
+    if(response.error) {
+      throw new Error(data.error.message);
+    }
+    console.log(response.current.condition.text);
+
+    const div = document.createElement("div");
+    weatherInfo.innerHTML = "";
+    div.innerHTML = `
+    
+        <div class="weather-information">
+          <div class="country-info">
+            <div class="country">${response.location.country}</div>
+            <div class="country-name">${response.location.name}</div>
+            <div class="condition">${response.current.condition.text}</div>
+            <div class="condition">${response.location.localtime}</div>
+
+            <div class="temp">${response.current.temp_c}°C</div>
+        </div>
+          <div class="weather-forcast">
+            <div class="first-div">
+              <div class="wind-directio">Wind Direction : ${response.current.wind_dir}</div>
+              <div class="preci">Precipitation: ${response.current.precip_in}</div>
+              <div class="pressure">Pressure: ${response.current.pressure_mb}(millibar)</div>
+            </div>
+            <div class="second-div">
+              <div class="temp-fre">Temperature in F: ${response.current.temp_f}</div>
+              <div class="latitude">Latitude: ${response.location.lat}</div>
+              <div class="longitude">Longitude: ${response.location.lon}</div>
+            </div>
+          </div>
+
+          <div class="wea-info">
+            <div class="wind">
+              <div class="wind-img">
+                <i class="fa-solid fa-wind"></i>
+              </div>
+              <div class="km">${response.current.wind_kph}km/h</div>
+              <div class="wind-title">Wind</div>
+            </div>
+
+            <div class="humidity">
+              <div class="humidity-image">
+                <i class="fa-solid fa-droplet"></i>
+              </div>
+              <div class="per">${response.current.humidity}%</div>
+              <div class="name">Humidity</div>
+            </div>
+
+            <div class="visibility">
+              <div class="visib-img">
+                <i class="fa-solid fa-eye"></i>
+              </div>
+              <div class="vis-in-km">${response.current.vis_km}km</div>
+              <div class="vis-name">Visibility</div>
+            </div>
+          </div>
+        </div>`;
+    weatherInfo.appendChild(div);
+    searchInput.value = "";
+    searchIcon.style.pointerEvents = "none";
+    searchIcon.style.opacity = "0.5";
+    errorMess.innerHTML = "";
+  } catch (error) {
+    console.log("error");
+    errorMess.innerHTML =
+      "You have enter a wrong country name please check and enter again";
+      weatherInfo.innerHTML = "";
+
+    if(error.message.includes("Failed to fetch")) {
+      showError("Network error. Check your internet connection")
+    }  else {
+      showError(error.message || "Something went wrong.")
+    }
+
+  }
+};
+
+    </script>
+  </body>
+</html>
